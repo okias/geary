@@ -11,8 +11,9 @@ public class Geary.MockAccount : Account, MockObject {
     public class MockSearchQuery : SearchQuery {
 
         internal MockSearchQuery(Account owner,
+                                 SearchQuery.Operator expression,
                                  string raw) {
-            base(owner, raw, SearchQuery.Strategy.EXACT);
+            base(owner, expression, raw, SearchQuery.Strategy.EXACT);
         }
 
     }
@@ -227,11 +228,12 @@ public class Geary.MockAccount : Account, MockObject {
         );
     }
 
-    public override async SearchQuery new_search_query(string raw,
+    public override async SearchQuery new_search_query(SearchQuery.Operator operator,
+                                                       string raw,
                                                        SearchQuery.Strategy strategy,
                                                        GLib.Cancellable? cancellable)
         throws GLib.Error {
-        return new MockSearchQuery(this, raw);
+        return new MockSearchQuery(this, operator, raw);
     }
 
     public override async Gee.Collection<EmailIdentifier>?
