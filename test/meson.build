@@ -36,6 +36,7 @@ geary_test_engine_sources = [
   'engine/common/common-contact-harvester-test.vala',
   'engine/db/db-database-test.vala',
   'engine/db/db-versioned-database-test.vala',
+  'engine/imap/command/imap-command-test.vala',
   'engine/imap/command/imap-create-command-test.vala',
   'engine/imap/command/imap-fetch-command-test.vala',
   'engine/imap/message/imap-data-format-test.vala',

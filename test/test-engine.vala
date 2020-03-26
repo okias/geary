@@ -50,6 +50,7 @@ int main(string[] args) {
     // Other IMAP tests rely on these working, so test them first
     engine.add_suite(new Geary.Imap.DataFormatTest().get_suite());
 
+    engine.add_suite(new Geary.Imap.CommandTest().get_suite());
     engine.add_suite(new Geary.Imap.CreateCommandTest().get_suite());
     engine.add_suite(new Geary.Imap.FetchCommandTest().get_suite());
     engine.add_suite(new Geary.Imap.ListParameterTest().get_suite());

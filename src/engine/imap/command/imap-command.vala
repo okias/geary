@@ -271,6 +271,108 @@ public abstract class Geary.Imap.Command : BaseObject {
         }
     }
 
+    /**
+     * Throws an error if this command's status response is NO or BAD.
+     *
+     * If the response is NO, an ImapError.OPERATIONAL_ERROR is
+     * thrown. If the response is BAD, an ImapError.SERVER_ERROR is
+     * thrown. If a specific response code is set, another more
+     * appropriate exception may be thrown. The given command is used
+     * to provide additional context information in case an error is
+     * thrown.
+     */
+    public void throw_on_error() throws ImapError {
+        StatusResponse? response = this.status;
+        if (response != null && response.status in new Status[] { BAD, NO }) {
+            ResponseCode? code = response.response_code;
+            if (code != null) {
+                ResponseCodeType code_type = code.get_response_code_type();
+                switch (code_type.value) {
+                case ResponseCodeType.ALREADYEXISTS:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Already exists: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.AUTHENTICATIONFAILED:
+                    throw new ImapError.UNAUTHENTICATED(
+                        "%s: Bad credentials: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.AUTHORIZATIONFAILED:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Not authorised: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.CANNOT:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Cannot be performed: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.LIMIT:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Hit limit: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.NOPERM:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Not permitted by ACL: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.NONEXISTENT:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Does not exist: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.OVERQUOTA:
+                    throw new ImapError.SERVER_ERROR(
+                        "%s: Over quota: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+
+                case ResponseCodeType.UNAVAILABLE:
+                    throw new ImapError.UNAVAILABLE(
+                        "%s: Server is unavailable: %s",
+                        to_brief_string(),
+                        response.to_string()
+                    );
+                }
+            }
+
+            // No interesting response code, so just throw a generic
+            // error
+            switch (response.status) {
+            case Status.NO:
+                throw new ImapError.OPERATIONAL_ERROR(
+                    "%s: Operational server error: %s",
+                    to_brief_string(),
+                    response.to_string()
+                );
+
+            case Status.BAD:
+                throw new ImapError.SERVER_ERROR(
+                    "%s: Fatal server error: %s",
+                    to_brief_string(),
+                    response.to_string()
+                );
+            }
+        }
+    }
+
     public virtual string to_string() {
         string args = this.args.to_string();
         return (Geary.String.is_empty(args))
