@@ -34,7 +34,7 @@ public class Geary.Imap.StatusResponse : ServerResponse {
      */
     public ResponseCode? response_code { get; private set; }
 
-    private StatusResponse(Tag tag, Status status, ResponseCode? response_code) {
+    internal StatusResponse(Tag tag, Status status, ResponseCode? response_code) {
         base (tag);
 
         this.status = status;
