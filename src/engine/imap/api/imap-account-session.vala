@@ -101,16 +101,7 @@ internal class Geary.Imap.AccountSession : Geary.Imap.SessionObject {
             ? new CreateCommand.special_use(mailbox, type)
             : new CreateCommand(mailbox);
 
-        StatusResponse response = yield send_command_async(
-            session, cmd, null, null, cancellable
-        );
-
-        if (response.status != Status.OK) {
-            throw new ImapError.SERVER_ERROR(
-                "Server reports error creating folder %s: %s",
-                mailbox.to_string(), response.to_string()
-            );
-        }
+        yield send_command_async(session, cmd, null, null, cancellable);
     }
 
     /**
@@ -339,11 +330,7 @@ internal class Geary.Imap.AccountSession : Geary.Imap.SessionObject {
         }
 
         Gee.List<MailboxInformation> list_results = new Gee.ArrayList<MailboxInformation>();
-        StatusResponse response = yield send_command_async(session, cmd, list_results, null, cancellable);
-        if (response.status != Status.OK) {
-            throw new ImapError.SERVER_ERROR("Unable to list children of %s: %s",
-                (folder != null) ? folder.to_string() : "root", response.to_string());
-        }
+        yield send_command_async(session, cmd, list_results, null, cancellable);
 
         // See note at ListCommand about some servers returning the
         // parent's name alongside their children ... this filters
@@ -369,36 +356,26 @@ internal class Geary.Imap.AccountSession : Geary.Imap.SessionObject {
                                                StatusDataType[] status_types,
                                                Cancellable? cancellable)
     throws Error {
-        Gee.List<StatusData> status_results = new Gee.ArrayList<StatusData>();
-        StatusResponse response = yield send_command_async(
-            session,
-            new StatusCommand(mailbox, status_types),
-            null,
-            status_results,
-            cancellable
+        var status_results = new Gee.ArrayList<StatusData>();
+        var cmd = new StatusCommand(mailbox, status_types);
+        yield send_command_async(
+            session, cmd, null, status_results, cancellable
         );
-
-        if (response.status != Status.OK) {
-            throw new ImapError.SERVER_ERROR("Error fetching \"%s\" STATUS: %s",
-                                             mailbox.to_string(),
-                                             response.to_string());
-        }
-
         if (status_results.size != 1) {
             throw new ImapError.INVALID("Invalid result count (%d) \"%s\" STATUS: %s",
                                         status_results.size,
                                         mailbox.to_string(),
-                                        response.to_string());
+                                        cmd.status.to_string());
         }
-
         return status_results[0];
     }
 
-    private async StatusResponse send_command_async(ClientSession session,
-                                                    Command cmd,
-                                                    Gee.List<MailboxInformation>? list_results,
-                                                    Gee.List<StatusData>? status_results,
-        Cancellable? cancellable) throws Error {
+    private async void send_command_async(ClientSession session,
+                                          Command cmd,
+                                          Gee.List<MailboxInformation>? list_results,
+                                          Gee.List<StatusData>? status_results,
+                                          GLib.Cancellable? cancellable)
+        throws GLib.Error {
         Gee.Map<Command, StatusResponse> responses = yield send_multiple_async(
             session,
             Geary.iterate<Command>(cmd).to_array_list(),
@@ -413,7 +390,8 @@ internal class Geary.Imap.AccountSession : Geary.Imap.SessionObject {
                 "No status response received from server"
             );
         }
-        return response;
+
+        cmd.throw_on_error();
     }
 
     private async Gee.Map<Command, StatusResponse>

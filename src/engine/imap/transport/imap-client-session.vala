@@ -921,40 +921,12 @@ public class Geary.Imap.ClientSession : BaseObject, Logging.Source {
         // should always proceed; only an Error could change this
         assert(params.proceed);
 
-        StatusResponse response = yield command_transaction_async(
-            cmd, cancellable
-        );
-
-        if (response.status != Status.OK) {
-            // Throw an error indicating auth failed here, unless
-            // there is a status response and it indicates that the
-            // server is merely reporting login as being unavailable,
-            // then don't since the creds might actually be fine.
-            ResponseCode? code = response.response_code;
-            if (code != null) {
-                ResponseCodeType? code_type = code.get_response_code_type();
-                if (code_type != null) {
-                    switch (code_type.value) {
-                    case ResponseCodeType.UNAVAILABLE:
-                        throw new ImapError.UNAVAILABLE(
-                            "Login restricted: %s: ", response.to_string()
-                        );
-
-                    case ResponseCodeType.AUTHENTICATIONFAILED:
-                        // pass through to the error being thrown below
-                        break;
-
-                    default:
-                        throw new ImapError.SERVER_ERROR(
-                            "Login error: %s: ", response.to_string()
-                        );
-                    }
-                }
-            }
-
-            throw new ImapError.UNAUTHENTICATED(
-                "Bad credentials: %s: ", response.to_string()
-            );
+        yield command_transaction_async(cmd, cancellable);
+        try {
+            cmd.throw_on_error();
+        } catch (ImapError.OPERATIONAL_ERROR err) {
+            // Catch any plain errors because of a NO
+            throw new ImapError.UNAUTHENTICATED(err.message);
         }
 
         return cmd.status;
@@ -1368,21 +1340,21 @@ public class Geary.Imap.ClientSession : BaseObject, Logging.Source {
     // select/examine
     //
 
-    public async StatusResponse select_async(MailboxSpecifier mailbox,
-                                             GLib.Cancellable? cancellable)
+    public async void select_async(MailboxSpecifier mailbox,
+                                   GLib.Cancellable? cancellable)
         throws GLib.Error {
-        return yield select_examine_async(mailbox, true, cancellable);
+        yield select_examine_async(mailbox, true, cancellable);
     }
 
-    public async StatusResponse examine_async(MailboxSpecifier mailbox,
-                                              GLib.Cancellable? cancellable)
+    public async void examine_async(MailboxSpecifier mailbox,
+                                    GLib.Cancellable? cancellable)
         throws GLib.Error {
-        return yield select_examine_async(mailbox, false, cancellable);
+        yield select_examine_async(mailbox, false, cancellable);
     }
 
-    public async StatusResponse select_examine_async(MailboxSpecifier mailbox,
-                                                     bool is_select,
-                                                     GLib.Cancellable? cancellable)
+    public async void select_examine_async(MailboxSpecifier mailbox,
+                                           bool is_select,
+                                           GLib.Cancellable? cancellable)
         throws GLib.Error {
         // Ternary troubles
         Command cmd;
@@ -1399,7 +1371,8 @@ public class Geary.Imap.ClientSession : BaseObject, Logging.Source {
 
         assert(params.proceed);
 
-        return yield command_transaction_async(cmd, cancellable);
+        yield command_transaction_async(cmd, cancellable);
+        cmd.throw_on_error();
     }
 
     private uint on_select(uint state, uint event, void *user, Object? object) {
@@ -1454,7 +1427,7 @@ public class Geary.Imap.ClientSession : BaseObject, Logging.Source {
     // close mailbox
     //
 
-    public async StatusResponse close_mailbox_async(GLib.Cancellable? cancellable)
+    public async void close_mailbox_async(GLib.Cancellable? cancellable)
         throws GLib.Error {
         CloseCommand cmd = new CloseCommand();
 
@@ -1464,7 +1437,8 @@ public class Geary.Imap.ClientSession : BaseObject, Logging.Source {
         if (params.err != null)
             throw params.err;
 
-        return yield command_transaction_async(cmd, cancellable);
+        yield command_transaction_async(cmd, cancellable);
+        cmd.throw_on_error();
     }
 
     private uint on_close_mailbox(uint state, uint event, void *user, Object? object) {

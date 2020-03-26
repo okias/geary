@@ -113,10 +113,7 @@ private class Geary.Imap.FolderSession : Geary.Imap.SessionObject {
         session.status_response_received.connect(on_status_response);
 
         MailboxSpecifier mailbox = session.get_mailbox_for_path(folder.path);
-        StatusResponse? response = yield session.select_async(
-            mailbox, cancellable
-        );
-        throw_on_not_ok(response, "SELECT " + this.folder.path.to_string());
+        yield session.select_async(mailbox, cancellable);
 
         // if at end of SELECT command accepts_user_flags is still
         // UNKKNOWN, treat as TRUE because, according to IMAP spec, if
@@ -319,7 +316,7 @@ private class Geary.Imap.FolderSession : Geary.Imap.SessionObject {
         }
 
         foreach (Command cmd in responses.keys) {
-            throw_on_not_ok(responses.get(cmd), cmd.to_string());
+            cmd.throw_on_error();
         }
 
         return responses;
@@ -1129,26 +1126,6 @@ private class Geary.Imap.FolderSession : Geary.Imap.SessionObject {
 
         return false;
      }
-
-    private void throw_on_not_ok(StatusResponse response, string cmd)
-        throws ImapError {
-        switch (response.status) {
-        case Status.OK:
-            // All good
-            break;
-
-        case Status.NO:
-            throw new ImapError.NOT_SUPPORTED(
-                "Request %s failed: %s", cmd.to_string(), response.to_string()
-            );
-
-        default:
-            throw new ImapError.SERVER_ERROR(
-                "Unknown response status to %s: %s",
-                cmd.to_string(), response.to_string()
-            );
-        }
-    }
 
     private static bool required_but_not_set(Geary.Email.Field check, Geary.Email.Field users_fields, Geary.Email email) {
         return users_fields.require(check) ? !email.fields.is_all_set(check) : false;
