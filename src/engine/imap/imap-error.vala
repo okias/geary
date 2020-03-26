@@ -32,11 +32,21 @@ public errordomain Geary.ImapError {
     ALREADY_CONNECTED,
 
     /**
+     * A request failed due to an explicit NO response.
+     *
+     * An explicit NO response is defined per RFC 3501 §7.1.2.
+     *
+     * See [[https://tools.ietf.org/html/rfc3501#section-7.1.2]].
+     */
+    OPERATIONAL_ERROR,
+
+    /**
      * A request failed due to an explicit or implicit BAD response.
      *
-     * An explicit BAD response is as per RFC 3501 §7.3.1. An implicit
-     * BAD response is when the server returns an unexpected response,
-     * for example, sends a status response for the same command twice.
+     * An explicit BAD response is defined as per RFC 3501 §7.1.3. An
+     * implicit BAD response is when the server returns an unexpected
+     * response, for example, sends a status response for the same
+     * command twice.
      *
      * See [[https://tools.ietf.org/html/rfc3501#section-7.1.3]].
      */
@@ -46,14 +56,17 @@ public errordomain Geary.ImapError {
      * Indicates that an operation could not proceed without prior authentication.
      */
     UNAUTHENTICATED,
+
     /**
      * An operation is not supported by the IMAP stack or by the server.
      */
     NOT_SUPPORTED,
+
     /**
      * Indicates a basic parsing error, semantic in nature.
      */
     INVALID,
+
     /**
      * A network connection of some kind failed due to an expired timer.
      *

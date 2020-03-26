@@ -27,6 +27,7 @@ namespace Geary.ImapEngine {
             err is IOError.NOT_CONNECTED ||
             err is IOError.TIMED_OUT ||
             err is ImapError.NOT_CONNECTED ||
+            err is ImapError.OPERATIONAL_ERROR ||
             err is ImapError.TIMED_OUT ||
             err is ImapError.UNAVAILABLE
         );
