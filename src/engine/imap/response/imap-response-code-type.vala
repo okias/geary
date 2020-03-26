@@ -21,12 +21,16 @@ public class Geary.Imap.ResponseCodeType : BaseObject, Gee.Hashable<ResponseCode
     public const string AUTHENTICATIONFAILED = "authenticationfailed";
     public const string AUTHORIZATIONFAILED = "authorizationfailed";
     public const string BADCHARSET = "badcharset";
+    public const string CANNOT = "cannot";
     public const string CAPABILITY = "capability";
     public const string CLIENTBUG = "clientbug";
     public const string COPYUID = "copyuid";
+    public const string LIMIT = "limit";
     public const string MYRIGHTS = "myrights";
     public const string NEWNAME = "newname";
-    public const string NONEXISTANT = "nonexistant";
+    public const string NONEXISTENT = "nonexistent";
+    public const string NOPERM = "noperm";
+    public const string OVERQUOTA = "overquota";
     public const string PARSE = "parse";
     public const string PERMANENT_FLAGS = "permanentflags";
     public const string READONLY = "read-only";
