@@ -303,8 +303,10 @@ public abstract class Geary.Imap.Command : BaseObject {
                     );
 
                 case ResponseCodeType.AUTHORIZATIONFAILED:
-                    throw new ImapError.SERVER_ERROR(
-                        "%s: Not authorised: %s",
+                    // At least Yahoo uses this to indicate a login
+                    // failure
+                    throw new ImapError.UNAUTHENTICATED(
+                        "%s: Bad authorisation: %s",
                         to_brief_string(),
                         response.to_string()
                     );
